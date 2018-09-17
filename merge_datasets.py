@@ -1,13 +1,10 @@
-import re
 import sys
 import logging
-import decoding
+import sys
+from typing import Tuple, List, Optional
 
-from lxml import etree
-from os import listdir
-from os.path import isfile, join, abspath
+import decoding
 from dataset import Dataset, Page, Line
-from typing import Dict, Tuple, List, Optional
 
 
 def parse_arguments():
@@ -76,7 +73,7 @@ def merge_datasets(dataset1: Dataset, dataset2: Dataset) -> Dataset:
     return result
 
 
-def print_stats(abbyy_dataset, tesseract_dataset, merged_dataset):
+def print_statistics(abbyy_dataset, tesseract_dataset, merged_dataset):
     print("ABBYY")
     print(abbyy_dataset)
     print()
@@ -96,9 +93,10 @@ def main():
 
     merged_dataset = merge_datasets(abbyy_dataset, tesseract_dataset)
 
-    print_stats(abbyy_dataset, tesseract_dataset, merged_dataset)
+    print_statistics(abbyy_dataset, tesseract_dataset, merged_dataset)
 
     merged_dataset.save(args.output_folder)
+    print("\nDataset saved to " + args.output_folder)
 
     return 0
 
