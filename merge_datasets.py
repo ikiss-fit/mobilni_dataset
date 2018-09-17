@@ -1,4 +1,3 @@
-import sys
 import logging
 import sys
 from typing import Tuple, List, Optional
@@ -73,17 +72,6 @@ def merge_datasets(dataset1: Dataset, dataset2: Dataset) -> Dataset:
     return result
 
 
-def print_statistics(abbyy_dataset, tesseract_dataset, merged_dataset):
-    print("ABBYY")
-    print(abbyy_dataset)
-    print()
-    print("TESSERACT")
-    print(tesseract_dataset)
-    print()
-    print("MERGED DATASET")
-    print(merged_dataset)
-
-
 def main():
     args = parse_arguments()
     logging.basicConfig(filename='merge.log',level=logging.DEBUG)
@@ -92,8 +80,6 @@ def main():
     tesseract_dataset = Dataset(args.tesseract_folder)
 
     merged_dataset = merge_datasets(abbyy_dataset, tesseract_dataset)
-
-    print_statistics(abbyy_dataset, tesseract_dataset, merged_dataset)
 
     merged_dataset.save(args.output_folder)
     print("\nDataset saved to " + args.output_folder)
