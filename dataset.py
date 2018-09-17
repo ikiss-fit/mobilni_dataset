@@ -24,7 +24,7 @@ class Line:
         return not self.__eq__(other)
 
     def get_xml_output(self) -> etree.ElementTree:
-        text_line = etree.Element("TextElement")
+        text_line = etree.Element("TextLine")
 
         if self.confidence is not None:
             text_line.set("custom", "confidence:" + str(self.confidence) + ";")
@@ -133,3 +133,18 @@ class Dataset:
     def save(self, path: str) -> None:
         for page_id, page in self.pages.items():
             page.save(path)
+
+    def get_lengths(self) -> List[int]:
+        lengths = []
+
+        for _, page in self.pages.items():
+            lengths.append(len(page.lines))
+
+        return lengths
+
+    def get_statistics(self) -> Dict[str, object]:
+        statistics = {}
+
+        statistics["lengths"] = self.get_lengths()
+
+        return statistics
