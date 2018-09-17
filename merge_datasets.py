@@ -7,7 +7,7 @@ from lxml import etree
 from os import listdir
 from os.path import isfile, join, abspath
 from dataset import Dataset, Page, Line
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Optional
 
 
 def parse_arguments():
@@ -15,7 +15,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--abbyy-folder', help='Path to abbyy input files.', required=True)
     parser.add_argument('-t', '--tesseract-folder', help='Path to tesseract input files.', required=True)
-    parser.add_argument('-o', '--output-file', help='Path to output file.', required=True)
+    parser.add_argument('-o', '--output-folder', help='Path to output folder.', required=True)
     args = parser.parse_args()
     return args
 
@@ -42,7 +42,7 @@ def get_same_lines(aligned_lines: List[Tuple[Line, Line]]) -> List[Line]:
     return result
 
 
-def intersect_pages(page1: Page, page2: Page) -> Page:
+def intersect_pages(page1: Page, page2: Page) -> Optional[Page]:
     lines1 = page1.lines
     lines2 = page2.lines
 
@@ -53,6 +53,9 @@ def intersect_pages(page1: Page, page2: Page) -> Page:
     aligned_lines = decoding.levenshtein_alignment(lines1, lines2)
 
     same_lines = get_same_lines(aligned_lines)
+
+    if len(same_lines) == 0:
+        return None
 
     return Page(page1.id, same_lines)
 
@@ -66,7 +69,9 @@ def merge_datasets(dataset1: Dataset, dataset2: Dataset) -> Dataset:
             page2 = dataset2.pages[id]
 
             page = intersect_pages(page1, page2)
-            result.add_page(page)
+
+            if page is not None:
+                result.add_page(page)
 
     return result
 
@@ -92,6 +97,8 @@ def main():
     merged_dataset = merge_datasets(abbyy_dataset, tesseract_dataset)
 
     print_stats(abbyy_dataset, tesseract_dataset, merged_dataset)
+
+    merged_dataset.save(args.output_folder)
 
     return 0
 
