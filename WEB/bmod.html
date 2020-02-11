@@ -2,9 +2,79 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>$Title$</title>
+    <title>Brno - Mobile OCR Dataset</title>
+
+<!--    <link href="{{ url_for('static',filename='bootstrap.css') }}" rel="stylesheet" />-->
+    <link href="{{ url_for('static',filename='bootstrap.minimal.needed.css') }}" rel="stylesheet" />
+
+
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href="{{ url_for('static',filename='bmod.css') }}" rel="stylesheet" />
+    <script src="{{ url_for('static',filename='bmod.js') }}"></script>
 </head>
 <body>
-$END$
+
+    <div id="page_content" class="content">
+        <h1>Brno - Mobile OCR Dataset</h1>
+
+        <div class="content">
+            <h2>Download</h2>
+                <div class="content">
+                    <p>PAGE XML and photos</p>
+                    <p>Cropped lines with transcriptions</p>
+                    <p>Entire dataset</p>
+                </div>
+
+            <h2>Evaluate</h2>
+                <div class="content">
+<!--                    <form id="bmod_upload_form" method="POST" action="/" enctype="multipart/form-data">-->
+<!--                        <p>-->
+<!--                            <input id="bmod_upload_file_input" type="file" name="bmod_uploaded_transcription_file" />-->
+<!--                            <span onclick="uploadBMODTranscriptionFile()" style="cursor: pointer">Upload</span>-->
+<!--                        </p>-->
+<!--                    </form>-->
+
+                    <form id="bmod_upload_form" method="POST" action="/" enctype="multipart/form-data">
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" name="bmod_uploaded_transcription_file" id="bmod_upload_file_input" aria-describedby="bmod_upload_file_input">
+                                <label class="custom-file-label" id="bmod_upload_label" for="bmod_upload_file_input">Choose file</label>
+                            </div>
+
+                            <span class="input-group-text" id="bmod_upload_button" onclick="uploadBMODTranscriptionFile()">Upload</span>
+                        </div>
+
+
+                    </form>
+
+                    <div id="error_block" {% if success is not defined or success == true %} class="hidden" {% endif %}>
+                        <p id="bmod_upload_form_no_file_message">Please, select a file.</p>
+
+                        {% if success is defined and success == false %}
+                            {% if message is defined and message|length > 0 %}
+                                <p>Error message: {{ message }}</p>
+                            {% else %}
+                                <p>Something unexpectedly failed. Please, report this to ikiss@fit.vutbr.cz.</p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <div id="success_block" {% if success is not defined or success == false %} class="hidden" {% endif %}>
+                        {% if success is defined and success == true %}
+                            <p>Thank you for the participation. Your achieved results:</p>
+
+                            <table id="results">
+                                <tr><td>CER:</td><td>{{ cer }}</td></tr>
+                                <tr><td>WER:</td><td>{{ wer }}</td></tr>
+                            </table>
+
+                            {% if message is defined and message|length > 0 %}
+                                <p>Additional info: {{ message }}</p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
 </body>
 </html>

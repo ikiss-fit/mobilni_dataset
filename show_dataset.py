@@ -46,7 +46,7 @@ def update_offsets(image):
     return int(offset_left), int(offset_left)
 
 
-def draw_bounding_box(image, bounding_box, color, thickness, top_offset, left_offset):
+def draw_bounding_box(image, bounding_box, color, thickness, top_offset, left_offset, line_type):
     top_left_corner = bounding_box.start.get_tuple(top_offset, left_offset)
     bottom_right_corner = bounding_box.end.get_tuple(top_offset, left_offset)
 
@@ -54,27 +54,29 @@ def draw_bounding_box(image, bounding_box, color, thickness, top_offset, left_of
         bottom_left_corner = bounding_box.inner_points[0].get_tuple(top_offset, left_offset)
         top_right_corner = bounding_box.inner_points[1].get_tuple(top_offset, left_offset)
 
-        cv2.line(image, top_left_corner, top_right_corner, color, thickness)
-        cv2.line(image, top_left_corner, bottom_left_corner, color, thickness)
-        cv2.line(image, top_right_corner, bottom_right_corner, color, thickness)
-        cv2.line(image, bottom_left_corner, bottom_right_corner, color, thickness)
+        cv2.line(image, top_left_corner, top_right_corner, color, thickness, lineType=line_type)
+        cv2.line(image, top_left_corner, bottom_left_corner, color, thickness, lineType=line_type)
+        cv2.line(image, top_right_corner, bottom_right_corner, color, thickness, lineType=line_type)
+        cv2.line(image, bottom_left_corner, bottom_right_corner, color, thickness, lineType=line_type)
     else:
-        cv2.rectangle(image, top_left_corner, bottom_right_corner, color, thickness)
+        cv2.rectangle(image, top_left_corner, bottom_right_corner, color, thickness, lineType=line_type)
 
 
 def draw_information(image, page, bbox_translation):
     top_offset = 0
     left_offset = 0
 
+    line_type = cv2.LINE_AA
+
     if bbox_translation:
         top_offset, left_offset = update_offsets(image)
 
     for line in page.lines:
         if line.bounding_box is not None:
-            draw_bounding_box(image, line.bounding_box, (255, 0, 0), 3, top_offset, left_offset)
+            draw_bounding_box(image, line.bounding_box, (255, 0, 0), 4, top_offset, left_offset, line_type)
 
             if line.baseline is not None:
-                cv2.line(image, line.baseline.start.get_tuple(top_offset, left_offset), line.baseline.end.get_tuple(top_offset, left_offset), (0, 255, 0), 3)
+                cv2.line(image, line.baseline.start.get_tuple(top_offset, left_offset), line.baseline.end.get_tuple(top_offset, left_offset), (0, 255, 0), 4, lineType=line_type)
 
     return image
 
@@ -104,6 +106,10 @@ def translate_logs(logs_folder):
             translation[log_name[:log_name.index(".")]] = page_id
 
     return translation
+
+
+def save_image(image, path):
+    cv2.imwrite(path, image)
 
 
 def show_images(dataset, images_folder, logs_folder=None, bbox_translation=False, prefix=""):
@@ -139,30 +145,35 @@ def show_images(dataset, images_folder, logs_folder=None, bbox_translation=False
 
             if image is not None:
                 image = draw_information(image, page, bbox_translation)
-                cv2.imshow('image', image)
+                cv2.imwrite("/home/ikiss/Desktop/BMOD/poster/detected_lines/renders/" + image_name, image)
 
-                next_image = False
-                close = False
-                while not next_image and not close:
-                    pressed_key = cv2.waitKey(100) & 0xFF
-
-                    # ESC -> stop
-                    if pressed_key == 27:
-                        close = True
-
-                    # ENTER -> show next image
-                    elif pressed_key == ord("\n") or pressed_key == ord("\r"):
-                        next_image = True
-
-                    # 'p' -> print current page id
-                    elif pressed_key == ord("p"):
-                        print(page_id)
-
-                    if cv2.getWindowProperty('image', cv2.WND_PROP_VISIBLE) < 1:
-                        close = True
-
-                if close:
-                    break
+                # cv2.imshow('image', image)
+                #
+                # next_image = False
+                # close = False
+                # while not next_image and not close:
+                #     pressed_key = cv2.waitKey(100) & 0xFF
+                #
+                #     # ESC -> stop
+                #     if pressed_key == 27:
+                #         close = True
+                #
+                #     # ENTER -> show next image
+                #     elif pressed_key == ord("\n") or pressed_key == ord("\r"):
+                #         next_image = True
+                #
+                #     # 'p' -> print current page id
+                #     elif pressed_key == ord("p"):
+                #         print(page_id)
+                #
+                #     elif pressed_key == ord("s"):
+                #         save_image(image, "/home/ikiss/Desktop/img.jpg")
+                #
+                #     if cv2.getWindowProperty('image', cv2.WND_PROP_VISIBLE) < 1:
+                #         close = True
+                #
+                # if close:
+                #     break
 
             else:
                 pass

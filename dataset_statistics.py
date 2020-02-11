@@ -1,6 +1,8 @@
 import os
 import sys
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as font_manager
+from matplotlib.pyplot import figure
 import numpy as np
 from PIL import Image
 import os
@@ -49,35 +51,53 @@ def translate_logs(logs_folder):
 
 
 def show_charts(dataset: Dataset) -> None:
-    lengths = dataset.get_lengths()
-    show_histogram(lengths, "Histogram of lines per page", "Number of lines", "Number of templates", bin_labels=True)
+    pass
+    # statistics = dataset.get_statistics(lengths=True, characters=True, verbose=True)
+    # lengths = statistics["lengths"]
+    # characters = statistics["characters"]
+
+    # show_histogram(lengths, "Histogram of lines per page", "Number of lines", "Number of templates", bin_labels=True)
+    # show_character_lengths(characters)
 
 
-def show_histogram(values: List[int], title, x_label, y_label="Count", xticks=None, logarithmic_scale=False, bins=None, bin_labels=False, aggregate_last=False) -> None:
+def show_histogram(values: List[int], title, x_label, y_label="Count", xticks=None, logarithmic_scale=False, bins=None, bin_labels=False, aggregate_last=False, large=False, left=0.1, right=0.9, top=0.9, bottom=0.1, col_width=0.9) -> None:
+    font_properties = font_manager.FontProperties(fname="/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman.ttf", weight="normal", style="normal", size=10)
+
+    fig_width = 7 if large is True else 3.4
+    figure(num=None, figsize=(fig_width, 1.5), facecolor='w', edgecolor='k')
+
     if bins is None:
         bins = np.arange(min(values), max(values) + 2)
-    # elif aggregate_last:
-    #     values = np.clip(values, bins[0], bins[-1])
 
     if xticks is None:
         xticks = bins
 
-    n, bins, patches = plt.hist(values, bins=bins, rwidth=0.95)
+    n, bins, patches = plt.hist(values, bins=bins, rwidth=col_width)
 
     if logarithmic_scale:
         plt.xscale("log")
     else:
         plt.axis([0, bins[-1], 0, max(n)])
 
-    plt.title(title)
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
+    if title is not None:
+        plt.title(title)
+
+    plt.xlabel(x_label, fontproperties=font_properties)
+    plt.ylabel(y_label, fontproperties=font_properties, verticalalignment="bottom")
+
+    yticks_values, _ = plt.yticks()
+    yticks_labels = []
+    for yticks_value in yticks_values:
+        yticks_labels.append(str(int(yticks_value)))
+
+    plt.yticks(yticks_values, yticks_labels, fontproperties=font_properties)
 
     if bin_labels:
-        bins_labels(bins, xticks)
+        bins_labels(bins, xticks, fontproperties=font_properties)
     else:
-        plt.xticks(bins, xticks)
+        plt.xticks(bins, xticks, fontproperties=font_properties)
 
+    plt.subplots_adjust(left=left, right=right, top=top, bottom=bottom)
     plt.show()
 
 
@@ -85,10 +105,6 @@ def bins_labels(bins, ticks, **kwargs):
     bin_w = (max(bins) - min(bins)) / (len(bins) - 1)
     plt.xticks(np.arange(min(bins)+bin_w/2, max(bins), bin_w), ticks, **kwargs)
     plt.xlim(bins[0], bins[-1])
-
-
-def print_statistics(dataset: Dataset) -> None:
-    print("Lengths: ", dataset.get_lengths())
 
 
 def get_image_widths(crops_path):
@@ -161,6 +177,7 @@ def devices_statistics(dataset, devices, path, exif_data=None):
     device_statistics = {}
 
     device_name_translation = {
+        "SHIELD Tablet NVIDIA": "NVIDIA SHIELD Tablet",
         "Samsung GT-I9100": "Samsung Galaxy S II",
         "GT-I9100 Samsung": "Samsung Galaxy S II",
         "SAMSUNG SM-G900F": "Samsung Galaxy S5",
@@ -185,7 +202,7 @@ def devices_statistics(dataset, devices, path, exif_data=None):
     total = len(dataset.pages)
 
     for index, page in enumerate(dataset.pages):
-        print("\r{current}/{total} ".format(current=index, total=total), end="")
+        # print("\r{current}/{total} ".format(current=index+1, total=total), end="")
 
         if page in devices:
             relative_path_to_photograph = devices[page]
@@ -212,10 +229,13 @@ def devices_statistics(dataset, devices, path, exif_data=None):
             except:
                 pass
 
+            print(page, device)
+
             if device in device_statistics:
                 device_statistics[device] += 1
             else:
                 device_statistics[device] = 1
+    print()
 
     # print(device_statistics)
 
@@ -234,28 +254,41 @@ def show_devices_chart(device_statistics, sort=True):
         devices = list(device_statistics.keys())
         counts = list(device_statistics.values())
 
-    show_horizontal_bar_chart(devices, counts, x_label="Number of photographs", title="Device statistics")
+    show_horizontal_bar_chart(devices, counts, x_label="Number of photographs", title=None)
 
 
 def show_horizontal_bar_chart(labels, values, x_label="Count", title="Chart", show_values=True):
+    font_properties = font_manager.FontProperties(fname="/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman.ttf",
+                                                  weight="normal", style="normal", size=10)
+    font_properties_bold = font_manager.FontProperties(fname="/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman_Bold.ttf",
+                                                  weight="normal", style="normal", size=10)
     fig, ax = plt.subplots()
+
+    fig.set_figheight(4.5)
+    fig.set_figwidth(3.4)
 
     if show_values:
         for i, v in enumerate(values):
-            plt.text(v, i, " " + str(v), color='#1f77b4', va='center', fontweight='bold')
+            plt.text(v, i + 0.1, " " + str(v), fontproperties=font_properties_bold, color='#1f77b4', va='center', fontweight='bold')
 
     y_pos = np.arange(len(labels))
 
     ax.barh(y_pos, values, align='center')
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(labels)
+    ax.set_yticklabels(labels, fontproperties=font_properties)
     ax.invert_yaxis()  # labels read top-to-bottom
-    ax.set_xlabel(x_label)
-    ax.set_xlim(0, 4200)
-    ax.set_title(title)
+    ax.set_xlabel(x_label, fontproperties=font_properties)
 
-    plt.subplots_adjust(left=0.4, right=0.6, top=0.7, bottom=0.3)
+    xticks = np.arange(0, 4400, 1000)
+    ax.set_xlim(0, 4400)
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xticks, fontproperties=font_properties)
+
+    if title is not None:
+        ax.set_title(title, fontproperties=font_properties)
+
     plt.margins(y=0.01)
+    plt.subplots_adjust(left=0.45, right=0.99, top=0.99, bottom=0.12)
     plt.show()
 
 
@@ -280,35 +313,53 @@ def show_template_usage_photographs(values, max_value=25):
 
     bins = np.arange(1, max_value + 2)
     ticks = list(map(str, bins[:-1]))
+
+    ticks = [t if int(t) % 2 == 1 else "" for t in ticks]
     ticks[-1] += "+"
 
-    show_histogram(values, "Histogram of template usage (photographs)", "Number of photographs",
-                   "Number of templates", bins=bins, xticks=ticks, bin_labels=True)
+    show_histogram(values, None, "Number of photographs",
+                   "Number of templates", bins=bins, xticks=ticks, bin_labels=True, left=0.16, bottom=0.3, right=0.99, col_width=0.80)
 
 
-def show_template_usage_lines(values, max_value=1100):
+def show_template_usage_lines(values, max_value=800):
     values = np.clip(values, min(values), max_value)
 
-    bins = np.arange(0, max_value + 2, 100)
+    bin_size = 100
+
+    bins = np.arange(0, max_value + bin_size + 2, bin_size)
     ticks = list(map(str, bins))
     ticks[-1] = "2500"
 
-    show_histogram(values, "Histogram of template usage (lines)", "Number of lines",
+    show_histogram(values, None, "Number of lines",
                    "Number of templates", logarithmic_scale=False,
-                   bins=bins, xticks=ticks)
+                   bins=bins, xticks=ticks, left=0.18, bottom=0.28, right=0.96, top=0.9, col_width=0.9)
 
-    ticks = ["1-99", "100-199", "200-299", "300-399", "400-499", "500-599", "600-699", "700-799", "800-899", "900-999", "1000+"]
 
-    show_histogram(values, "Histogram of template usage (lines)", "Number of lines",
-                   "Number of templates", logarithmic_scale=False,
-                   bins=bins, xticks=ticks, bin_labels=True)
+def show_character_lengths(values, max_value=120):
+    values = np.clip(values, min(values), max_value)
+    bins = np.arange(0, max_value + 2, 10)
+    ticks = list(map(str, bins))
+    ticks = [t if int(t) % 20 == 0 else "" for t in ticks]
+
+    show_histogram(values, None, "Number of characters in line", "Number of lines", bins=bins, xticks=ticks, left=0.22, bottom=0.28, right=0.96, top=0.9, col_width=0.9)
+
+
+def load_lengths(lines_path):
+    lengths = []
+
+    with open(lines_path, "r") as f:
+        for line in f:
+            line_text = line.strip().split(" ", maxsplit=1)[1]
+            lengths.append(len(line_text))
+
+    return lengths
+
 
 def main():
     args = parse_arguments()
 
     if args.dataset is not None:
         dataset = Dataset(args.dataset, lazy=True)
-
         print(dataset)
 
         if args.devices is not None:
@@ -331,20 +382,21 @@ def main():
 
             if args.show_charts:
                 show_charts(dataset)
-            else:
-                print_statistics(dataset)
 
     if args.crops is not None:
         show_crops_charts(args.crops)
+
+    if args.lines and args.show_charts:
+        show_character_lengths(load_lengths(args.lines))
 
     if args.lines is not None and args.logs is not None:
         translation = translate_logs(args.logs)
         used_templates_lines, used_templates_pages = print_photograph_statistics(args.lines, translation)
 
         if args.show_charts:
-
             show_template_usage_lines(list(used_templates_lines.values()))
-            show_template_usage_photographs(list(used_templates_pages.values()))
+            # show_template_usage_photographs(list(used_templates_pages.values()))
+            pass
 
 
     return 0

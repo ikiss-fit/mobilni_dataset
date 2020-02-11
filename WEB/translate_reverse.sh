@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 python3 translate.py \
-    --lines="/home/ikiss/Documents/Datasets/mobilni_dataset/DATASET/lines.test" \
+    --lines="translated.txt" \
     --translations="test_translations.txt" \
-    --output="translated.txt"
-    # --output="/home/ikiss/Documents/Datasets/mobilni_dataset/DATASET/lines.test"
+    --output="translated_reverse.txt" \
+    --reverse

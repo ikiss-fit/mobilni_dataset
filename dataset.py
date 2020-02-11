@@ -27,10 +27,10 @@ class Point:
 
 
 class Rectangle:
-    def __init__(self, **kwargs):
-        self.start = None  # type: Point
-        self.end = None  # type: Point
-        self.inner_points = []  # type: List[Point]
+    def __init__(self, start=None, end=None, inner_points=None, **kwargs):
+        self.start = start  # type: Point
+        self.end = end  # type: Point
+        self.inner_points = inner_points if inner_points is not None else []  # type: List[Point]
 
         if "xml_string" in kwargs:
             if isinstance(kwargs["xml_string"], str):
@@ -65,9 +65,6 @@ class Rectangle:
                 else:
                     raise ValueError("kwargs contains keys 'start_x' and 'start_y', but at least one of these is not of type 'Number'.")
 
-            else:
-                raise ValueError("kwargs does not contain neither key 'start' nor keys 'start_x' and 'start_y'.")
-
             if "end" in kwargs:
                 if isinstance(kwargs["end"], Point):
                     self.end = kwargs["end"]
@@ -85,9 +82,6 @@ class Rectangle:
                     self.end = Point(self.start.x + kwargs["width"], self.start.y + kwargs["height"])
                 else:
                     raise ValueError("kwargs contains keys 'width' and 'height', but at least one of these is not of type 'Number'.")
-
-            else:
-                raise ValueError("kwargs does not contain neither key 'end' nor keys 'end_x' and 'end_y' nor keys 'width' and 'height'.")
 
     def __str__(self):
         return "Start: " + str(self.start) + ", End: " + str(self.end)
@@ -293,17 +287,35 @@ class Dataset:
         for page_id, page in self.pages.items():
             page.save(path)
 
-    def get_lengths(self) -> List[int]:
-        lengths = []
+    def get_page_statistics(self, lengths=False, characters=False, verbose=False) -> Dict[str, List[int]]:
+        lengths_stat = []
+        characters_stat = []
 
-        for page_id, _ in self.pages.items():
-            lengths.append(len(self.get_page(page_id).lines))
+        total = len(self.pages.items())
 
-        return lengths
+        for index, (page_id, _) in enumerate(self.pages.items()):
+            if verbose:
+                print("{current}/{total}: {page}".format(current=index+1, total=total, page=page_id))
 
-    def get_statistics(self) -> Dict[str, object]:
-        statistics = {"lengths": self.get_lengths()}
+            page = self.get_page(page_id)
 
+            if lengths:
+                lengths_stat.append(len(page.lines))
+
+            if characters:
+                for line in page.lines:
+                    if verbose:
+                        print("{text} ({length})".format(text=line.text, length=len(line.text)))
+
+                    characters_stat.append(len(line.text))
+
+        if verbose:
+            print()
+
+        return {"lengths": lengths_stat, "characters": characters_stat}
+
+    def get_statistics(self, lengths=False, characters=False, verbose=False) -> Dict[str, object]:
+        statistics = self.get_page_statistics(lengths=lengths, characters=characters, verbose=verbose)
         return statistics
 
     def count_lines(self):

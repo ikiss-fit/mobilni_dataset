@@ -1,16 +1,12 @@
 import configparser
 
+
 def parse_configuration(config_path):
     config_dict = {}
     config = configparser.ConfigParser()
     config.read(config_path)
     for section in config.sections():
         config_dict[section] = parse_configuration_section(config, section)
-
-    config_dict["handwritten_dataset"]["source_extensions"] = parse_tuple(
-        config_dict["handwritten_dataset"]["source_extensions"])
-    config_dict["handwritten_dataset"]["target_extensions"] = parse_tuple(
-        config_dict["handwritten_dataset"]["target_extensions"])
 
     return config_dict
 

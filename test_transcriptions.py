@@ -5,8 +5,8 @@ import decoding
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--dataset-transcriptions", required=True)
-    parser.add_argument("-t", "--test-transcriptions", required=True)
+    parser.add_argument("-s", "--source-transcriptions", required=True)
+    parser.add_argument("-t", "--target-transcriptions", required=True)
     args = parser.parse_args()
     return args
 
@@ -28,8 +28,8 @@ def print_alignment(alignment):
     bold_end = '\033[0m'
     missing_char = "_"
 
-    source_transcription = "Dataset transcription: "
-    target_transcription = "Manual transcription:  "
+    source_transcription = "Source transcription: "
+    target_transcription = "Target transcription:  "
 
     for pair in alignment:
         source_char, target_char = pair[0], pair[1]
@@ -51,20 +51,20 @@ def print_alignment(alignment):
     print(target_transcription)
 
 
-def test(dataset_transcriptions, test_transcriptions):
+def test(source_transcriptions, target_transcriptions):
     first = True
     distances = []
     lengths = []
 
-    for filename in test_transcriptions:
-        if filename in dataset_transcriptions:
-            source = [c for c in dataset_transcriptions[filename]]
-            target = [c for c in test_transcriptions[filename]]
+    for filename in target_transcriptions:
+        if filename in source_transcriptions:
+            source = [c for c in source_transcriptions[filename]]
+            target = [c for c in target_transcriptions[filename]]
             alignment = decoding.levenshtein_alignment(source, target)
             distance = decoding.levenshtein_distance(source, target)
 
             distances.append(distance)
-            lengths.append(len(test_transcriptions[filename]))
+            lengths.append(len(target_transcriptions[filename]))
 
             if distance > 0:
                 if first:
@@ -76,7 +76,7 @@ def test(dataset_transcriptions, test_transcriptions):
                 print_alignment(alignment)
 
         else:
-            print(filename, "could not be found in dataset")
+            print(filename, "could not be found in source transcriptions")
 
     total_length = sum(lengths)
     total_distance = sum(distances)
@@ -90,10 +90,10 @@ def test(dataset_transcriptions, test_transcriptions):
 def main():
     args = parse_args()
 
-    dataset_transcriptions = load_transcriptions(args.dataset_transcriptions)
-    test_transcriptions = load_transcriptions(args.test_transcriptions)
+    source_transcriptions = load_transcriptions(args.source_transcriptions)
+    target_transcriptions = load_transcriptions(args.target_transcriptions)
 
-    test(dataset_transcriptions, test_transcriptions)
+    test(source_transcriptions, target_transcriptions)
 
     return 0
 
